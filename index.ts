@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import { PrismaClient} from '@prisma/client';
-import { Contact } from './generated/prisma';
+import type { Contact } from './generated/prisma';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -91,7 +91,7 @@ app.post(
       const phoneNumbers = new Set<string>();
       const secondaryContactIds: number[] = [];
 
-      for (const c of relatedContacts) {
+      for (const c of relatedContacts as Contact[]) {
         if (c.email) emails.add(c.email);
         if (c.phoneNumber) phoneNumbers.add(c.phoneNumber);
         if (c.linkPrecedence === 'secondary') secondaryContactIds.push(c.id);
