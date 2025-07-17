@@ -1,10 +1,11 @@
 import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
-import { PrismaClient} from '@prisma/client';
-import type { Contact } from './generated/prisma';
+import { PrismaClient } from '@prisma/client';
 
 const app = express();
 const prisma = new PrismaClient();
+
+type Contact = NonNullable<Awaited<ReturnType<typeof prisma.contact.findFirst>>>;
 
 app.use(bodyParser.json());
 
@@ -37,7 +38,7 @@ app.post(
           .json({ error: 'Either email or phoneNumber must be provided.' });
       }
 
-      // Find all contacts that match either the email or phoneNumber
+      // find all contacts that match either the email or phoneNumber
       const contacts = await prisma.contact.findMany({
         where: {
           OR: [
@@ -48,7 +49,7 @@ app.post(
         orderBy: { createdAt: 'asc' },
       });
 
-      // No matching contacts, create a new primary
+      // no matching contacts, create a new primary
       if (contacts.length === 0) {
         const newContact = await prisma.contact.create({
           data: {
@@ -68,7 +69,7 @@ app.post(
         });
       }
 
-      // Identify the oldest primary contact
+      // identify the oldest contact
       let primary = contacts.find((c: Contact) => c.linkPrecedence === 'primary') ?? contacts[0];
       for (const c of contacts as Contact[]) {
         if (c.createdAt < primary.createdAt) {
@@ -76,7 +77,7 @@ app.post(
         }
     }
 
-      // Get all contacts directly or indirectly related to this primary
+      // get all contacts related to this primary
       const relatedContacts = await prisma.contact.findMany({
         where: {
           OR: [
@@ -125,7 +126,7 @@ app.post(
         }
       }
 
-      // Demote any older primaries incorrectly marked as primary
+      // demote any older primaries incorrectly marked as primary
       await Promise.all(
         relatedContacts
           .filter((c: Contact) => c.linkPrecedence === 'primary' && c.id !== primary.id)
@@ -157,5 +158,5 @@ app.post(
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
