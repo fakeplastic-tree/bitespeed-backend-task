@@ -139,8 +139,8 @@ app.post('/identify', async (req: Request<{}, {}, IdentifyRequest>, res: Respons
     return res.status(200).json({
       contact: {
         primaryContatctId: primary.id,
-        emails: [primary.email, ...[...emails].filter(e => e !== primary.email)].filter(Boolean),
-        phoneNumbers: [primary.phoneNumber, ...[...phoneNumbers].filter(p => p !== primary.phoneNumber)].filter(Boolean),
+        emails: [...new Set([primary.email, ...emails].filter((e): e is string => !!e))],
+        phoneNumbers: [...new Set([primary.phoneNumber, ...phoneNumbers].filter((p): p is string => !!p))],
         secondaryContactIds
       }
     });
